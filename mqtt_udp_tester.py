@@ -14,13 +14,13 @@ class MQTTUDPBridge:
         self.root.geometry("900x750")
         self.root.minsize(700, 550)
         
-        # Configure dark theme
-        self.setup_dark_theme()
+        # Simple modern styling
+        self.setup_modern_theme()
         
         self.client = None
         self.connected = False
-        self.udp_mappings = []  # List of dictionaries with topic, udp_ip, udp_port, udp_message
-        self.broker_settings = {'address': 'localhost', 'port': 1883, 'auto_connect': True}  # Default broker settings
+        self.udp_mappings = []
+        self.broker_settings = {'address': 'localhost', 'port': 1883, 'auto_connect': True}
         self.mappings_file = "mqtt_udp_mappings.json"
         
         # Load existing mappings and settings
@@ -33,146 +33,20 @@ class MQTTUDPBridge:
         
         # Auto-connect if enabled
         if self.broker_settings.get('auto_connect', True):
-            self.root.after(1000, self.auto_connect)  # Connect after 1 second to let UI load
+            self.root.after(1000, self.auto_connect)
         
-    def setup_dark_theme(self):
-        """Configure dark theme colors and styles"""
-        # Dark theme colors
-        self.colors = {
-            'bg': '#2b2b2b',           # Main background
-            'fg': '#ffffff',           # Main text
-            'select_bg': '#404040',    # Selection background
-            'select_fg': '#ffffff',    # Selection text
-            'entry_bg': '#404040',     # Entry background
-            'entry_fg': '#ffffff',     # Entry text
-            'button_bg': '#505050',    # Button background
-            'button_fg': '#ffffff',    # Button text
-            'frame_bg': '#353535',     # Frame background
-            'accent': '#0078d4',       # Accent color (blue)
-            'success': '#107c10',      # Success color (green)
-            'warning': '#ff8c00',      # Warning color (orange)
-            'error': '#d13438',        # Error color (red)
-            'border': '#555555',       # Border color
-        }
-        
-        # Configure root window
-        self.root.configure(bg=self.colors['bg'])
-        
-        # Configure ttk styles
+    def setup_modern_theme(self):
+        """Configure clean modern styling"""
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Configure Notebook (tabs)
-        style.configure('TNotebook', 
-                       background=self.colors['bg'],
-                       borderwidth=0)
-        style.configure('TNotebook.Tab',
-                       background=self.colors['frame_bg'],
-                       foreground=self.colors['fg'],
-                       padding=[20, 8],
-                       borderwidth=1,
-                       focuscolor='none')
-        style.map('TNotebook.Tab',
-                 background=[('selected', self.colors['accent']),
-                           ('active', self.colors['select_bg'])])
+        # Configure modern styles
+        style.configure('Title.TLabel', font=('Segoe UI', 12, 'bold'))
+        style.configure('Heading.TLabel', font=('Segoe UI', 10, 'bold'))
+        style.configure('Info.TLabel', font=('Segoe UI', 8))
         
-        # Configure Frames
-        style.configure('TFrame', background=self.colors['bg'])
-        style.configure('TLabelFrame', 
-                       background=self.colors['bg'],
-                       foreground=self.colors['fg'],
-                       borderwidth=1,
-                       relief='solid')
-        style.configure('TLabelFrame.Label',
-                       background=self.colors['bg'],
-                       foreground=self.colors['accent'],
-                       font=('Segoe UI', 9, 'bold'))
-        
-        # Configure Labels
-        style.configure('TLabel',
-                       background=self.colors['bg'],
-                       foreground=self.colors['fg'],
-                       font=('Segoe UI', 9))
-        
-        # Configure Entries
-        style.configure('TEntry',
-                       fieldbackground=self.colors['entry_bg'],
-                       foreground=self.colors['entry_fg'],
-                       borderwidth=1,
-                       insertcolor=self.colors['fg'],
-                       relief='solid')
-        style.map('TEntry',
-                 focuscolor=[('focus', self.colors['accent'])])
-        
-        # Configure Buttons
-        style.configure('TButton',
-                       background=self.colors['button_bg'],
-                       foreground=self.colors['button_fg'],
-                       borderwidth=1,
-                       focuscolor='none',
-                       font=('Segoe UI', 9),
-                       relief='solid')
-        style.map('TButton',
-                 background=[('active', self.colors['select_bg']),
-                           ('pressed', self.colors['accent'])])
-        
-        # Special button styles
-        style.configure('Accent.TButton',
-                       background=self.colors['accent'],
-                       foreground='white')
-        style.map('Accent.TButton',
-                 background=[('active', '#106ebe'),
-                           ('pressed', '#005a9e')])
-        
-        style.configure('Success.TButton',
-                       background=self.colors['success'],
-                       foreground='white')
-        style.map('Success.TButton',
-                 background=[('active', '#0e6e0e'),
-                           ('pressed', '#0c5d0c')])
-        
-        style.configure('Warning.TButton',
-                       background=self.colors['warning'],
-                       foreground='white')
-        style.map('Warning.TButton',
-                 background=[('active', '#e67c00'),
-                           ('pressed', '#cc6f00')])
-        
-        # Configure Treeview
-        style.configure('Treeview',
-                       background=self.colors['entry_bg'],
-                       foreground=self.colors['fg'],
-                       fieldbackground=self.colors['entry_bg'],
-                       borderwidth=1,
-                       relief='solid')
-        style.configure('Treeview.Heading',
-                       background=self.colors['frame_bg'],
-                       foreground=self.colors['accent'],
-                       font=('Segoe UI', 9, 'bold'),
-                       relief='solid',
-                       borderwidth=1)
-        style.map('Treeview',
-                 background=[('selected', self.colors['accent'])])
-        
-        # Configure Checkbutton
-        style.configure('TCheckbutton',
-                       background=self.colors['bg'],
-                       foreground=self.colors['fg'],
-                       focuscolor='none',
-                       font=('Segoe UI', 9))
-        style.map('TCheckbutton',
-                 background=[('active', self.colors['bg'])])
-        
-        # Configure Scrollbar
-        style.configure('Vertical.TScrollbar',
-                       background=self.colors['frame_bg'],
-                       troughcolor=self.colors['bg'],
-                       borderwidth=1,
-                       arrowcolor=self.colors['fg'],
-                       darkcolor=self.colors['frame_bg'],
-                       lightcolor=self.colors['frame_bg'])
-        style.map('Vertical.TScrollbar',
-                 background=[('active', self.colors['select_bg'])])
+        # Button styles
+        style.configure('Accent.TButton', font=('Segoe UI', 9, 'bold'))
         
     def create_widgets(self):
         # Create notebook for tabs
@@ -191,64 +65,59 @@ class MQTTUDPBridge:
         # Status bar
         self.status_var = tk.StringVar()
         self.status_var.set("⭕ Disconnected")
-        self.status_bar = tk.Label(self.root, textvariable=self.status_var, 
-                                 relief=tk.SUNKEN, anchor=tk.W,
-                                 bg=self.colors['frame_bg'],
-                                 fg=self.colors['fg'],
-                                 font=('Segoe UI', 9),
-                                 padx=10, pady=5)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.status_bar = ttk.Label(self.root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
+        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=2)
         
     def create_mqtt_tab(self, notebook):
         mqtt_frame = ttk.Frame(notebook)
         notebook.add(mqtt_frame, text="MQTT Connection")
         
         # Connection settings
-        conn_frame = ttk.LabelFrame(mqtt_frame, text="MQTT Broker Settings")
-        conn_frame.pack(fill="x", padx=10, pady=10)
+        conn_frame = ttk.LabelFrame(mqtt_frame, text="MQTT Broker Settings", padding=10)
+        conn_frame.pack(fill="x", padx=15, pady=15)
         
         # Broker
-        ttk.Label(conn_frame, text="Broker:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.broker_entry = ttk.Entry(conn_frame, width=30)
+        ttk.Label(conn_frame, text="Broker:").grid(row=0, column=0, padx=5, pady=8, sticky="w")
+        self.broker_entry = ttk.Entry(conn_frame, width=30, font=('Segoe UI', 9))
         self.broker_entry.insert(0, self.broker_settings['address'])
-        self.broker_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.broker_entry.grid(row=0, column=1, padx=5, pady=8, sticky="ew")
         
         # Port
-        ttk.Label(conn_frame, text="Port:").grid(row=0, column=2, padx=5, pady=5, sticky="w")
-        self.port_entry = ttk.Entry(conn_frame, width=10)
+        ttk.Label(conn_frame, text="Port:").grid(row=0, column=2, padx=5, pady=8, sticky="w")
+        self.port_entry = ttk.Entry(conn_frame, width=10, font=('Segoe UI', 9))
         self.port_entry.insert(0, str(self.broker_settings['port']))
-        self.port_entry.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+        self.port_entry.grid(row=0, column=3, padx=5, pady=8, sticky="w")
         
-        # Connect button
-        self.connect_button = ttk.Button(conn_frame, text="🔌 Connect", command=self.toggle_connection, style='Accent.TButton')
-        self.connect_button.grid(row=1, column=1, padx=5, pady=10, sticky="w")
+        # Connect button and status
+        button_frame = ttk.Frame(conn_frame)
+        button_frame.grid(row=1, column=0, columnspan=4, pady=15, sticky="w")
+        
+        self.connect_button = ttk.Button(button_frame, text="🔌 Connect", command=self.toggle_connection, style='Accent.TButton')
+        self.connect_button.pack(side="left", padx=(0, 15))
         
         # Auto-connect checkbox
         self.auto_connect_var = tk.BooleanVar(value=self.broker_settings.get('auto_connect', True))
-        ttk.Checkbutton(conn_frame, text="Auto-connect on startup", variable=self.auto_connect_var, 
-                       command=self.save_auto_connect_setting).grid(row=1, column=2, padx=5, pady=10, sticky="w")
+        ttk.Checkbutton(button_frame, text="Auto-connect on startup", variable=self.auto_connect_var, 
+                       command=self.save_auto_connect_setting).pack(side="left", padx=(0, 15))
         
         # Connection status indicator
-        self.conn_status_label = ttk.Label(conn_frame, text="●", foreground=self.colors['error'], font=('Segoe UI', 12, 'bold'))
-        self.conn_status_label.grid(row=1, column=3, padx=5, pady=10, sticky="w")
+        self.conn_status_label = ttk.Label(button_frame, text="●", foreground="red", font=('Segoe UI', 14, 'bold'))
+        self.conn_status_label.pack(side="left")
         
         # Subscribed topics display
-        topics_frame = ttk.LabelFrame(mqtt_frame, text="📡 Subscribed Topics")
-        topics_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        topics_frame = ttk.LabelFrame(mqtt_frame, text="📡 Subscribed Topics", padding=10)
+        topics_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         
-        self.topics_listbox = tk.Listbox(topics_frame, height=8,
-                                       bg=self.colors['entry_bg'],
-                                       fg=self.colors['entry_fg'],
-                                       selectbackground=self.colors['accent'],
-                                       selectforeground='white',
-                                       borderwidth=1,
-                                       relief='solid',
-                                       font=('Consolas', 9))
-        topics_scrollbar = ttk.Scrollbar(topics_frame, orient="vertical", command=self.topics_listbox.yview)
+        # Create frame for listbox and scrollbar
+        list_frame = ttk.Frame(topics_frame)
+        list_frame.pack(fill="both", expand=True)
+        
+        self.topics_listbox = tk.Listbox(list_frame, height=8, font=('Consolas', 9))
+        topics_scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.topics_listbox.yview)
         self.topics_listbox.configure(yscrollcommand=topics_scrollbar.set)
         
-        self.topics_listbox.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-        topics_scrollbar.pack(side="right", fill="y", pady=5)
+        self.topics_listbox.pack(side="left", fill="both", expand=True)
+        topics_scrollbar.pack(side="right", fill="y")
         
         conn_frame.columnconfigure(1, weight=1)
         
@@ -257,50 +126,56 @@ class MQTTUDPBridge:
         notebook.add(udp_frame, text="UDP Mappings")
         
         # Add new mapping frame
-        add_frame = ttk.LabelFrame(udp_frame, text="➕ Add New Mapping")
-        add_frame.pack(fill="x", padx=10, pady=10)
+        add_frame = ttk.LabelFrame(udp_frame, text="➕ Add New Mapping", padding=10)
+        add_frame.pack(fill="x", padx=15, pady=15)
         
         # Topic
         ttk.Label(add_frame, text="MQTT Topic:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.new_topic_entry = ttk.Entry(add_frame, width=25)
+        self.new_topic_entry = ttk.Entry(add_frame, width=25, font=('Segoe UI', 9))
         self.new_topic_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         
         # UDP IP
         ttk.Label(add_frame, text="UDP IP:").grid(row=0, column=2, padx=5, pady=5, sticky="w")
-        self.new_udp_ip_entry = ttk.Entry(add_frame, width=15)
+        self.new_udp_ip_entry = ttk.Entry(add_frame, width=15, font=('Segoe UI', 9))
         self.new_udp_ip_entry.insert(0, "127.0.0.1")
         self.new_udp_ip_entry.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
         
         # UDP Port
         ttk.Label(add_frame, text="UDP Port:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.new_udp_port_entry = ttk.Entry(add_frame, width=10)
+        self.new_udp_port_entry = ttk.Entry(add_frame, width=10, font=('Segoe UI', 9))
         self.new_udp_port_entry.insert(0, "8080")
         self.new_udp_port_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
         
         # UDP Message
         ttk.Label(add_frame, text="UDP Message:").grid(row=1, column=2, padx=5, pady=5, sticky="w")
-        self.new_udp_message_entry = ttk.Entry(add_frame, width=25)
+        self.new_udp_message_entry = ttk.Entry(add_frame, width=25, font=('Segoe UI', 9))
         self.new_udp_message_entry.insert(0, "{payload}")
         self.new_udp_message_entry.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
         
-        # Add button
-        ttk.Button(add_frame, text="➕ Add Mapping", command=self.add_mapping, style='Success.TButton').grid(row=2, column=1, padx=5, pady=10, sticky="w")
+        # Add button and help
+        button_help_frame = ttk.Frame(add_frame)
+        button_help_frame.grid(row=2, column=0, columnspan=4, pady=15, sticky="ew")
+        
+        ttk.Button(button_help_frame, text="➕ Add Mapping", command=self.add_mapping).pack(side="left")
         
         # Help text
-        help_text = "💡 Use {payload} to insert MQTT message content, {topic} for topic name"
-        help_label = ttk.Label(add_frame, text=help_text, font=("Segoe UI", 8))
-        help_label.grid(row=2, column=2, columnspan=2, padx=5, pady=5, sticky="w")
+        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name"
+        ttk.Label(button_help_frame, text=help_text, style='Info.TLabel').pack(side="left", padx=(20, 0))
         
         add_frame.columnconfigure(1, weight=1)
         add_frame.columnconfigure(3, weight=1)
         
         # Current mappings frame
-        mappings_frame = ttk.LabelFrame(udp_frame, text="📋 Current Mappings")
-        mappings_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        mappings_frame = ttk.LabelFrame(udp_frame, text="📋 Current Mappings", padding=10)
+        mappings_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+        
+        # Create frame for treeview and scrollbar
+        tree_frame = ttk.Frame(mappings_frame)
+        tree_frame.pack(fill="both", expand=True, pady=(0, 10))
         
         # Treeview for mappings
         columns = ("Topic", "UDP IP", "UDP Port", "UDP Message")
-        self.mappings_tree = ttk.Treeview(mappings_frame, columns=columns, show="headings", height=10)
+        self.mappings_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
         
         for i, col in enumerate(columns):
             self.mappings_tree.heading(col, text=col)
@@ -309,20 +184,20 @@ class MQTTUDPBridge:
             else:
                 self.mappings_tree.column(col, width=120)
         
-        mappings_scrollbar = ttk.Scrollbar(mappings_frame, orient="vertical", command=self.mappings_tree.yview)
+        mappings_scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.mappings_tree.yview)
         self.mappings_tree.configure(yscrollcommand=mappings_scrollbar.set)
         
-        self.mappings_tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
-        mappings_scrollbar.pack(side="right", fill="y", pady=5)
+        self.mappings_tree.pack(side="left", fill="both", expand=True)
+        mappings_scrollbar.pack(side="right", fill="y")
         
         # Bind double-click to edit
         self.mappings_tree.bind("<Double-1>", self.edit_mapping)
         
-        # Remove button
+        # Buttons
         button_frame = ttk.Frame(mappings_frame)
-        button_frame.pack(pady=10)
-        ttk.Button(button_frame, text="✏️ Edit Selected", command=self.edit_mapping, style='Accent.TButton').pack(side="left", padx=5)
-        ttk.Button(button_frame, text="🗑️ Remove Selected", command=self.remove_mapping, style='Warning.TButton').pack(side="left", padx=5)
+        button_frame.pack()
+        ttk.Button(button_frame, text="✏️ Edit Selected", command=self.edit_mapping).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="🗑️ Remove Selected", command=self.remove_mapping).pack(side="left", padx=5)
         
     def create_messages_tab(self, notebook):
         messages_frame = ttk.Frame(notebook)
@@ -330,7 +205,7 @@ class MQTTUDPBridge:
         
         # Control buttons
         control_frame = ttk.Frame(messages_frame)
-        control_frame.pack(fill="x", padx=10, pady=5)
+        control_frame.pack(fill="x", padx=15, pady=15)
         
         ttk.Button(control_frame, text="🧹 Clear Log", command=self.clear_messages).pack(side="left", padx=5)
         ttk.Button(control_frame, text="🔄 Reload Mappings", command=self.reload_mappings).pack(side="left", padx=5)
@@ -340,20 +215,12 @@ class MQTTUDPBridge:
         ttk.Checkbutton(control_frame, text="🚀 Enable UDP Sending", variable=self.udp_enabled).pack(side="left", padx=20)
         
         # Mappings file info
-        mappings_info = ttk.Label(control_frame, text=f"📄 {self.mappings_file}", font=("Segoe UI", 8))
+        mappings_info = ttk.Label(control_frame, text=f"📄 {self.mappings_file}", style='Info.TLabel')
         mappings_info.pack(side="right", padx=5)
         
         # Messages display
-        self.message_display = scrolledtext.ScrolledText(messages_frame, wrap=tk.WORD, height=25,
-                                                       bg=self.colors['entry_bg'],
-                                                       fg=self.colors['entry_fg'],
-                                                       insertbackground=self.colors['fg'],
-                                                       selectbackground=self.colors['accent'],
-                                                       selectforeground='white',
-                                                       borderwidth=1,
-                                                       relief='solid',
-                                                       font=('Consolas', 9))
-        self.message_display.pack(fill="both", expand=True, padx=10, pady=5)
+        self.message_display = scrolledtext.ScrolledText(messages_frame, wrap=tk.WORD, height=25, font=('Consolas', 9))
+        self.message_display.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         self.message_display.config(state=tk.DISABLED)
         
     def add_mapping(self):
@@ -385,11 +252,34 @@ class MQTTUDPBridge:
         }
         
         self.udp_mappings.append(mapping)
-        self.save_broker_settings()  # Save broker settings when adding mappings
+        self.save_broker_settings()
         self.save_mappings()
         self.update_mappings_display()
         self.update_mqtt_subscriptions()
-    
+        
+        # Clear entries
+        self.new_topic_entry.delete(0, tk.END)
+        self.new_udp_ip_entry.delete(0, tk.END)
+        self.new_udp_ip_entry.insert(0, "127.0.0.1")
+        self.new_udp_port_entry.delete(0, tk.END)
+        self.new_udp_port_entry.insert(0, "8080")
+        self.new_udp_message_entry.delete(0, tk.END)
+        self.new_udp_message_entry.insert(0, "{payload}")
+        
+    def remove_mapping(self):
+        selection = self.mappings_tree.selection()
+        if not selection:
+            messagebox.showwarning("Warning", "Please select a mapping to remove")
+            return
+        
+        item = self.mappings_tree.item(selection[0])
+        topic = item['values'][0]
+        
+        self.udp_mappings = [m for m in self.udp_mappings if m['topic'] != topic]
+        self.save_mappings()
+        self.update_mappings_display()
+        self.update_mqtt_subscriptions()
+        
     def edit_mapping(self, event=None):
         """Edit selected mapping"""
         selection = self.mappings_tree.selection()
@@ -420,7 +310,6 @@ class MQTTUDPBridge:
         edit_window = tk.Toplevel(self.root)
         edit_window.title("Edit Mapping")
         edit_window.geometry("500x300")
-        edit_window.configure(bg=self.colors['bg'])
         edit_window.transient(self.root)
         edit_window.grab_set()
         
@@ -428,35 +317,35 @@ class MQTTUDPBridge:
         edit_window.geometry("+%d+%d" % (self.root.winfo_rootx() + 150, self.root.winfo_rooty() + 100))
         
         # Create form
-        form_frame = ttk.LabelFrame(edit_window, text="Edit Mapping")
+        form_frame = ttk.LabelFrame(edit_window, text="Edit Mapping", padding=20)
         form_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
         # Topic
         ttk.Label(form_frame, text="MQTT Topic:").grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        topic_entry = ttk.Entry(form_frame, width=40)
+        topic_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
         topic_entry.insert(0, mapping['topic'])
         topic_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP IP
         ttk.Label(form_frame, text="UDP IP:").grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        ip_entry = ttk.Entry(form_frame, width=40)
+        ip_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
         ip_entry.insert(0, mapping['udp_ip'])
         ip_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP Port
         ttk.Label(form_frame, text="UDP Port:").grid(row=2, column=0, padx=10, pady=10, sticky="w")
-        port_entry = ttk.Entry(form_frame, width=40)
+        port_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
         port_entry.insert(0, str(mapping['udp_port']))
         port_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP Message
         ttk.Label(form_frame, text="UDP Message:").grid(row=3, column=0, padx=10, pady=10, sticky="w")
-        message_entry = ttk.Entry(form_frame, width=40)
+        message_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
         message_entry.insert(0, mapping['udp_message'])
         message_entry.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
         
         # Help text
-        help_text = "💡 Use {payload} to insert MQTT message content, {topic} for topic name"
+        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name"
         ttk.Label(form_frame, text=help_text, font=("Segoe UI", 8)).grid(row=4, column=0, columnspan=2, padx=10, pady=5)
         
         # Buttons
@@ -495,41 +384,18 @@ class MQTTUDPBridge:
             self.update_mqtt_subscriptions()
             
             edit_window.destroy()
-            self.log_message(f"✏️ Updated mapping: {new_topic}", 'success')
+            self.log_message(f"✏️ Updated mapping: {new_topic}")
         
         def cancel_edit():
             edit_window.destroy()
         
-        ttk.Button(button_frame, text="💾 Save Changes", command=save_changes, style='Success.TButton').pack(side="left", padx=10)
+        ttk.Button(button_frame, text="💾 Save Changes", command=save_changes).pack(side="left", padx=10)
         ttk.Button(button_frame, text="❌ Cancel", command=cancel_edit).pack(side="left", padx=10)
         
         form_frame.columnconfigure(1, weight=1)
         
         # Focus on first field
         topic_entry.focus_set()
-        
-        # Clear entries
-        self.new_topic_entry.delete(0, tk.END)
-        self.new_udp_ip_entry.delete(0, tk.END)
-        self.new_udp_ip_entry.insert(0, "127.0.0.1")
-        self.new_udp_port_entry.delete(0, tk.END)
-        self.new_udp_port_entry.insert(0, "8080")
-        self.new_udp_message_entry.delete(0, tk.END)
-        self.new_udp_message_entry.insert(0, "{payload}")
-        
-    def remove_mapping(self):
-        selection = self.mappings_tree.selection()
-        if not selection:
-            messagebox.showwarning("Warning", "Please select a mapping to remove")
-            return
-        
-        item = self.mappings_tree.item(selection[0])
-        topic = item['values'][0]
-        
-        self.udp_mappings = [m for m in self.udp_mappings if m['topic'] != topic]
-        self.save_mappings()
-        self.update_mappings_display()
-        self.update_mqtt_subscriptions()
         
     def update_mappings_display(self):
         # Clear existing items
@@ -599,7 +465,7 @@ class MQTTUDPBridge:
     def auto_connect(self):
         """Automatically connect on startup if enabled"""
         if self.broker_settings.get('auto_connect', True) and not self.connected:
-            self.log_message("🔄 Auto-connecting to broker...", 'info')
+            self.log_message("🔄 Auto-connecting to broker...")
             self.connect_mqtt()
     
     def save_auto_connect_setting(self):
@@ -614,12 +480,13 @@ class MQTTUDPBridge:
         self.connect_button.config(text="🔌 Connect")
         self.connected = False
         self.status_var.set("⭕ Disconnected")
-        self.conn_status_label.config(foreground=self.colors['error'])
+        self.conn_status_label.config(foreground="red")
         self.log_message("Disconnected from broker")
     
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            self.status_var.set(f"Connected to {self.broker_entry.get()}:{self.port_entry.get()}")
+            self.status_var.set(f"✅ Connected to {self.broker_entry.get()}:{self.port_entry.get()}")
+            self.conn_status_label.config(foreground="green")
             self.log_message("Connected to MQTT broker")
             self.update_mqtt_subscriptions()
         else:
@@ -631,16 +498,17 @@ class MQTTUDPBridge:
                 5: "Not authorized"
             }
             reason = conn_results.get(rc, f"Unknown error code {rc}")
-            self.status_var.set(f"Connection failed: {reason}")
+            self.status_var.set(f"❌ Connection failed: {reason}")
+            self.conn_status_label.config(foreground="red")
             self.log_message(f"Connection failed: {reason}")
             self.connected = False
-            self.connect_button.config(text="Connect")
+            self.connect_button.config(text="🔌 Connect")
     
     def on_disconnect(self, client, userdata, rc):
         if rc != 0:
             self.log_message("Unexpected disconnection")
             self.status_var.set("⚠️ Unexpectedly disconnected")
-            self.conn_status_label.config(foreground=self.colors['warning'])
+            self.conn_status_label.config(foreground="orange")
         self.connected = False
         self.connect_button.config(text="🔌 Connect")
     
@@ -651,7 +519,7 @@ class MQTTUDPBridge:
             timestamp = datetime.now().strftime("%H:%M:%S")
             
             # Log the received message
-            self.log_message(f"📨 [{timestamp}] {topic} → {payload}", 'received')
+            self.log_message(f"📨 [{timestamp}] {topic} → {payload}")
             
             # Check for matching UDP mappings
             for mapping in self.udp_mappings:
@@ -659,7 +527,7 @@ class MQTTUDPBridge:
                     if self.udp_enabled.get():
                         threading.Thread(target=self.send_udp, args=(mapping, topic, payload), daemon=True).start()
                     else:
-                        self.log_message(f"🚫 UDP disabled - would send to {mapping['udp_ip']}:{mapping['udp_port']}", 'warning')
+                        self.log_message(f"🚫 UDP disabled - would send to {mapping['udp_ip']}:{mapping['udp_port']}")
                     
         except Exception as e:
             self.log_message(f"Error processing message: {str(e)}")
@@ -701,10 +569,21 @@ class MQTTUDPBridge:
             sock.close()
             
             timestamp = datetime.now().strftime("%H:%M:%S")
-            self.log_message(f"🚀 [{timestamp}] UDP → {mapping['udp_ip']}:{mapping['udp_port']} → {udp_message}", 'sent')
+            self.log_message(f"🚀 [{timestamp}] UDP → {mapping['udp_ip']}:{mapping['udp_port']} → {udp_message}")
             
         except Exception as e:
-            self.log_message(f"❌ UDP send error: {str(e)}", 'error')
+            self.log_message(f"❌ UDP send error: {str(e)}")
+    
+    def log_message(self, message):
+        self.message_display.config(state=tk.NORMAL)
+        self.message_display.insert(tk.END, message + "\n")
+        self.message_display.see(tk.END)
+        self.message_display.config(state=tk.DISABLED)
+    
+    def clear_messages(self):
+        self.message_display.config(state=tk.NORMAL)
+        self.message_display.delete(1.0, tk.END)
+        self.message_display.config(state=tk.DISABLED)
     
     def load_mappings(self):
         """Load UDP mappings and broker settings from JSON file"""
@@ -717,7 +596,7 @@ class MQTTUDPBridge:
                 if isinstance(data, list):
                     # Old format - just mappings
                     self.udp_mappings = data
-                    self.broker_settings = {'address': 'localhost', 'port': 1883}
+                    self.broker_settings = {'address': 'localhost', 'port': 1883, 'auto_connect': True}
                     print(f"Loaded {len(self.udp_mappings)} mappings from {self.mappings_file} (old format)")
                 elif isinstance(data, dict):
                     # New format - mappings and broker settings
@@ -755,7 +634,7 @@ class MQTTUDPBridge:
             print(f"Error saving mappings: {str(e)}")
             # Also log to the GUI if it exists
             if hasattr(self, 'message_display'):
-                self.log_message(f"❌ Error saving mappings: {str(e)}", 'error')
+                self.log_message(f"❌ Error saving mappings: {str(e)}")
     
     def save_broker_settings(self):
         """Save current broker settings from the UI"""
@@ -765,40 +644,6 @@ class MQTTUDPBridge:
         except ValueError:
             # If port is invalid, keep the old value
             pass
-    
-    def log_message(self, message, msg_type='info'):
-        """Log message with color coding based on type"""
-        self.message_display.config(state=tk.NORMAL)
-        
-        # Insert message
-        start_pos = self.message_display.index(tk.INSERT)
-        self.message_display.insert(tk.END, message + "\n")
-        end_pos = self.message_display.index(tk.INSERT)
-        
-        # Apply color based on message type
-        if msg_type == 'received':
-            self.message_display.tag_add("received", start_pos, end_pos)
-            self.message_display.tag_config("received", foreground='#87CEEB')  # Sky blue
-        elif msg_type == 'sent':
-            self.message_display.tag_add("sent", start_pos, end_pos)
-            self.message_display.tag_config("sent", foreground='#90EE90')  # Light green
-        elif msg_type == 'error':
-            self.message_display.tag_add("error", start_pos, end_pos)
-            self.message_display.tag_config("error", foreground='#FF6B6B')  # Light red
-        elif msg_type == 'warning':
-            self.message_display.tag_add("warning", start_pos, end_pos)
-            self.message_display.tag_config("warning", foreground='#FFD700')  # Gold
-        elif msg_type == 'success':
-            self.message_display.tag_add("success", start_pos, end_pos)
-            self.message_display.tag_config("success", foreground='#98FB98')  # Pale green
-        
-        self.message_display.see(tk.END)
-        self.message_display.config(state=tk.DISABLED)
-    
-    def clear_messages(self):
-        self.message_display.config(state=tk.NORMAL)
-        self.message_display.delete(1.0, tk.END)
-        self.message_display.config(state=tk.DISABLED)
     
     def reload_mappings(self):
         """Reload mappings and broker settings from file and update displays"""
@@ -819,7 +664,7 @@ class MQTTUDPBridge:
         self.update_mappings_display()
         self.update_mqtt_subscriptions()
         
-        self.log_message(f"🔄 Reloaded: {old_count} → {new_count} mappings, broker: {old_broker} → {new_broker}", 'success')
+        self.log_message(f"🔄 Reloaded: {old_count} → {new_count} mappings, broker: {old_broker} → {new_broker}")
         
     def on_closing(self):
         if self.client and self.connected:
