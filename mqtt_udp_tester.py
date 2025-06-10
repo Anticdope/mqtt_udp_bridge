@@ -152,14 +152,26 @@ class MQTTUDPBridge:
         self.new_udp_message_entry.insert(0, "{payload}")
         self.new_udp_message_entry.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
         
+        # Trigger condition
+        ttk.Label(add_frame, text="Trigger on:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.new_trigger_entry = ttk.Entry(add_frame, width=10, font=('Segoe UI', 9))
+        self.new_trigger_entry.insert(0, "1")
+        self.new_trigger_entry.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        
+        # UDP Send Delay
+        ttk.Label(add_frame, text="UDP Delay (sec):").grid(row=2, column=2, padx=5, pady=5, sticky="w")
+        self.new_delay_entry = ttk.Entry(add_frame, width=10, font=('Segoe UI', 9))
+        self.new_delay_entry.insert(0, "0.0")
+        self.new_delay_entry.grid(row=2, column=3, padx=5, pady=5, sticky="w")
+        
         # Add button and help
         button_help_frame = ttk.Frame(add_frame)
-        button_help_frame.grid(row=2, column=0, columnspan=4, pady=15, sticky="ew")
+        button_help_frame.grid(row=3, column=0, columnspan=4, pady=15, sticky="ew")
         
         ttk.Button(button_help_frame, text="➕ Add Mapping", command=self.add_mapping).pack(side="left")
         
         # Help text
-        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name"
+        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name. Trigger on: value to send UDP (leave empty for all). UDP Delay: seconds to wait before sending (0.1 precision)"
         ttk.Label(button_help_frame, text=help_text, style='Info.TLabel').pack(side="left", padx=(20, 0))
         
         add_frame.columnconfigure(1, weight=1)
@@ -174,13 +186,15 @@ class MQTTUDPBridge:
         tree_frame.pack(fill="both", expand=True, pady=(0, 10))
         
         # Treeview for mappings
-        columns = ("Topic", "UDP IP", "UDP Port", "UDP Message")
+        columns = ("Topic", "UDP IP", "UDP Port", "UDP Message", "Trigger On", "Delay (s)")
         self.mappings_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=10)
         
         for i, col in enumerate(columns):
             self.mappings_tree.heading(col, text=col)
             if col == "UDP Message":
-                self.mappings_tree.column(col, width=200)
+                self.mappings_tree.column(col, width=160)
+            elif col in ["Trigger On", "Delay (s)"]:
+                self.mappings_tree.column(col, width=80)
             else:
                 self.mappings_tree.column(col, width=120)
         
@@ -227,6 +241,8 @@ class MQTTUDPBridge:
         topic = self.new_topic_entry.get().strip()
         udp_ip = self.new_udp_ip_entry.get().strip()
         udp_message = self.new_udp_message_entry.get().strip()
+        trigger_value = self.new_trigger_entry.get().strip()
+        delay_str = self.new_delay_entry.get().strip()
         
         try:
             udp_port = int(self.new_udp_port_entry.get().strip())
@@ -234,8 +250,19 @@ class MQTTUDPBridge:
             messagebox.showerror("Error", "UDP Port must be a number")
             return
         
+        # Validate delay value
+        try:
+            udp_delay = float(delay_str) if delay_str else 0.0
+            # Round to nearest 0.1 second
+            udp_delay = round(udp_delay, 1)
+            if udp_delay < 0:
+                udp_delay = 0.0
+        except ValueError:
+            messagebox.showerror("Error", "UDP Delay must be a number (seconds)")
+            return
+        
         if not topic or not udp_ip or not udp_message:
-            messagebox.showerror("Error", "All fields are required")
+            messagebox.showerror("Error", "Topic, UDP IP, and UDP Message are required")
             return
         
         # Check if topic already exists
@@ -248,7 +275,9 @@ class MQTTUDPBridge:
             'topic': topic,
             'udp_ip': udp_ip,
             'udp_port': udp_port,
-            'udp_message': udp_message
+            'udp_message': udp_message,
+            'trigger_value': trigger_value,  # Empty string means trigger on any value
+            'udp_delay': udp_delay  # Delay in seconds before sending UDP
         }
         
         self.udp_mappings.append(mapping)
@@ -265,6 +294,10 @@ class MQTTUDPBridge:
         self.new_udp_port_entry.insert(0, "8080")
         self.new_udp_message_entry.delete(0, tk.END)
         self.new_udp_message_entry.insert(0, "{payload}")
+        self.new_trigger_entry.delete(0, tk.END)
+        self.new_trigger_entry.insert(0, "1")
+        self.new_delay_entry.delete(0, tk.END)
+        self.new_delay_entry.insert(0, "0.0")
         
     def remove_mapping(self):
         selection = self.mappings_tree.selection()
@@ -309,7 +342,7 @@ class MQTTUDPBridge:
         """Show dialog to edit a mapping"""
         edit_window = tk.Toplevel(self.root)
         edit_window.title("Edit Mapping")
-        edit_window.geometry("500x300")
+        edit_window.geometry("800x400")
         edit_window.transient(self.root)
         edit_window.grab_set()
         
@@ -322,40 +355,54 @@ class MQTTUDPBridge:
         
         # Topic
         ttk.Label(form_frame, text="MQTT Topic:").grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        topic_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
+        topic_entry = ttk.Entry(form_frame, width=100, font=('Segoe UI', 9))
         topic_entry.insert(0, mapping['topic'])
         topic_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP IP
         ttk.Label(form_frame, text="UDP IP:").grid(row=1, column=0, padx=10, pady=10, sticky="w")
-        ip_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
+        ip_entry = ttk.Entry(form_frame, width=20, font=('Segoe UI', 9))
         ip_entry.insert(0, mapping['udp_ip'])
         ip_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP Port
         ttk.Label(form_frame, text="UDP Port:").grid(row=2, column=0, padx=10, pady=10, sticky="w")
-        port_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
+        port_entry = ttk.Entry(form_frame, width=20, font=('Segoe UI', 9))
         port_entry.insert(0, str(mapping['udp_port']))
         port_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
         
         # UDP Message
         ttk.Label(form_frame, text="UDP Message:").grid(row=3, column=0, padx=10, pady=10, sticky="w")
-        message_entry = ttk.Entry(form_frame, width=40, font=('Segoe UI', 9))
+        message_entry = ttk.Entry(form_frame, width=100, font=('Segoe UI', 9))
         message_entry.insert(0, mapping['udp_message'])
         message_entry.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
         
+        # Trigger Value
+        ttk.Label(form_frame, text="Trigger on:").grid(row=4, column=0, padx=10, pady=10, sticky="w")
+        trigger_entry = ttk.Entry(form_frame, width=20, font=('Segoe UI', 9))
+        trigger_entry.insert(0, mapping.get('trigger_value', ''))
+        trigger_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+        
+        # UDP Delay
+        ttk.Label(form_frame, text="UDP Delay (sec):").grid(row=5, column=0, padx=10, pady=10, sticky="w")
+        delay_entry = ttk.Entry(form_frame, width=20, font=('Segoe UI', 9))
+        delay_entry.insert(0, str(mapping.get('udp_delay', 0.0)))
+        delay_entry.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
+        
         # Help text
-        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name"
-        ttk.Label(form_frame, text=help_text, font=("Segoe UI", 8)).grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+        help_text = "💡 Use {payload} for MQTT message content, {topic} for topic name. Trigger on: value to send UDP (leave empty for all). UDP Delay: seconds to wait before sending (0.1 precision)"
+        ttk.Label(form_frame, text=help_text, font=("Segoe UI", 8)).grid(row=6, column=0, columnspan=2, padx=10, pady=5)
         
         # Buttons
         button_frame = ttk.Frame(form_frame)
-        button_frame.grid(row=5, column=0, columnspan=2, pady=20)
+        button_frame.grid(row=7, column=0, columnspan=2, pady=20)
         
         def save_changes():
             new_topic = topic_entry.get().strip()
             new_ip = ip_entry.get().strip()
             new_message = message_entry.get().strip()
+            new_trigger = trigger_entry.get().strip()
+            new_delay_str = delay_entry.get().strip()
             
             try:
                 new_port = int(port_entry.get().strip())
@@ -363,8 +410,19 @@ class MQTTUDPBridge:
                 messagebox.showerror("Error", "UDP Port must be a number")
                 return
             
+            # Validate delay value
+            try:
+                new_delay = float(new_delay_str) if new_delay_str else 0.0
+                # Round to nearest 0.1 second
+                new_delay = round(new_delay, 1)
+                if new_delay < 0:
+                    new_delay = 0.0
+            except ValueError:
+                messagebox.showerror("Error", "UDP Delay must be a number (seconds)")
+                return
+            
             if not new_topic or not new_ip or not new_message:
-                messagebox.showerror("Error", "All fields are required")
+                messagebox.showerror("Error", "Topic, UDP IP, and UDP Message are required")
                 return
             
             # Check if new topic conflicts with existing mappings (except current one)
@@ -378,6 +436,8 @@ class MQTTUDPBridge:
             mapping['udp_ip'] = new_ip
             mapping['udp_port'] = new_port
             mapping['udp_message'] = new_message
+            mapping['trigger_value'] = new_trigger
+            mapping['udp_delay'] = new_delay
             
             self.save_mappings()
             self.update_mappings_display()
@@ -404,11 +464,17 @@ class MQTTUDPBridge:
         
         # Add current mappings
         for mapping in self.udp_mappings:
+            trigger_display = mapping.get('trigger_value', '')
+            if trigger_display == '':
+                trigger_display = 'any'
+            delay_display = mapping.get('udp_delay', 0.0)
             self.mappings_tree.insert("", "end", values=(
                 mapping['topic'],
                 mapping['udp_ip'],
                 mapping['udp_port'],
-                mapping['udp_message']
+                mapping['udp_message'],
+                trigger_display,
+                f"{delay_display:.1f}"
             ))
     
     def update_mqtt_subscriptions(self):
@@ -466,7 +532,8 @@ class MQTTUDPBridge:
         """Automatically connect on startup if enabled"""
         if self.broker_settings.get('auto_connect', True) and not self.connected:
             self.log_message("🔄 Auto-connecting to broker...")
-            self.connect_mqtt()
+            # Add small delay before attempting connection to prevent timeout
+            self.root.after(500, self.connect_mqtt)
     
     def save_auto_connect_setting(self):
         """Save the auto-connect setting"""
@@ -524,10 +591,24 @@ class MQTTUDPBridge:
             # Check for matching UDP mappings
             for mapping in self.udp_mappings:
                 if self.topic_matches(mapping['topic'], topic):
-                    if self.udp_enabled.get():
-                        threading.Thread(target=self.send_udp, args=(mapping, topic, payload), daemon=True).start()
+                    # Check if we should trigger based on the payload value
+                    trigger_value = mapping.get('trigger_value', '')
+                    
+                    if trigger_value == '' or self.should_trigger(payload, trigger_value):
+                        if self.udp_enabled.get():
+                            # Get delay for this mapping
+                            udp_delay = mapping.get('udp_delay', 0.0)
+                            if udp_delay > 0:
+                                self.log_message(f"⏱️ Scheduling UDP send in {udp_delay:.1f}s to {mapping['udp_ip']}:{mapping['udp_port']}")
+                                # Schedule UDP send with delay
+                                threading.Timer(udp_delay, self.send_udp, args=(mapping, topic, payload)).start()
+                            else:
+                                # Send immediately
+                                threading.Thread(target=self.send_udp, args=(mapping, topic, payload), daemon=True).start()
+                        else:
+                            self.log_message(f"🚫 UDP disabled - would send to {mapping['udp_ip']}:{mapping['udp_port']}")
                     else:
-                        self.log_message(f"🚫 UDP disabled - would send to {mapping['udp_ip']}:{mapping['udp_port']}")
+                        self.log_message(f"🔕 No trigger - payload '{payload}' != trigger value '{trigger_value}'")
                     
         except Exception as e:
             self.log_message(f"Error processing message: {str(e)}")
@@ -549,11 +630,59 @@ class MQTTUDPBridge:
             
             if len(pattern_parts) != len(topic_parts):
                 return False
-            
-            for p_part, t_part in zip(pattern_parts, topic_parts):
-                if p_part != '+' and p_part != t_part:
-                    return False
+    
+    def should_trigger(self, payload, trigger_value):
+        """Check if the payload should trigger UDP sending"""
+        if trigger_value == '':
+            return True  # Empty trigger means send on any value
+        
+        # First try exact string match
+        if payload.strip() == trigger_value:
             return True
+        
+        # Try to parse as JSON and check if it contains the trigger value
+        try:
+            import json
+            data = json.loads(payload)
+            
+            # If it's a simple value, compare directly
+            if isinstance(data, (str, int, float)):
+                return str(data) == trigger_value
+            
+            # If it's a dict, look for the "Val" field first (Advantech format)
+            if isinstance(data, dict):
+                # Check "Val" field first (your specific sensor format)
+                if "Val" in data:
+                    return str(data["Val"]) == trigger_value
+                
+                # Check other common value field names as fallback
+                for key in ['value', 'val', 'state', 'status', 'data']:
+                    if key in data:
+                        return str(data[key]) == trigger_value
+                
+                # If no common fields found, check if any value matches
+                for value in data.values():
+                    if str(value) == trigger_value:
+                        return True
+            
+        except (json.JSONDecodeError, TypeError):
+            # Not JSON, fall back to string comparison
+            pass
+        
+        # Try numeric comparison
+        try:
+            payload_num = float(payload.strip())
+            trigger_num = float(trigger_value)
+            return payload_num == trigger_num
+        except (ValueError, TypeError):
+            pass
+        
+        return False
+            
+        for p_part, t_part in zip(pattern_parts, topic_parts):
+            if p_part != '+' and p_part != t_part:
+                return False
+        return True
         
         return False
     
@@ -594,13 +723,28 @@ class MQTTUDPBridge:
                 
                 # Handle both old format (just mappings list) and new format (dict with mappings and broker)
                 if isinstance(data, list):
-                    # Old format - just mappings
-                    self.udp_mappings = data
+                    # Ensure udp_delay field exists in all mappings
+                    self.udp_mappings = []
+                    for mapping in data:
+                        if 'trigger_value' not in mapping:
+                            mapping['trigger_value'] = ''  # Default to trigger on any value
+                        if 'udp_delay' not in mapping:
+                            mapping['udp_delay'] = 0.0  # Default to no delay
+                        self.udp_mappings.append(mapping)
                     self.broker_settings = {'address': 'localhost', 'port': 1883, 'auto_connect': True}
                     print(f"Loaded {len(self.udp_mappings)} mappings from {self.mappings_file} (old format)")
                 elif isinstance(data, dict):
                     # New format - mappings and broker settings
-                    self.udp_mappings = data.get('mappings', [])
+                    mappings_data = data.get('mappings', [])
+                    # Ensure trigger_value and udp_delay fields exist in all mappings
+                    self.udp_mappings = []
+                    for mapping in mappings_data:
+                        if 'trigger_value' not in mapping:
+                            mapping['trigger_value'] = ''  # Default to trigger on any value
+                        if 'udp_delay' not in mapping:
+                            mapping['udp_delay'] = 0.0  # Default to no delay
+                        self.udp_mappings.append(mapping)
+                    
                     broker_data = data.get('broker', {'address': 'localhost', 'port': 1883, 'auto_connect': True})
                     # Ensure auto_connect key exists
                     if 'auto_connect' not in broker_data:
