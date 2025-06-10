@@ -33,7 +33,7 @@ class MQTTUDPBridge:
         
         # Auto-connect if enabled
         if self.broker_settings.get('auto_connect', True):
-            self.root.after(1000, self.auto_connect)
+            self.root.after(3000, self.auto_connect)
         
     def setup_modern_theme(self):
         """Configure clean modern styling"""
