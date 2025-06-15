@@ -1,0 +1,81 @@
+{
+  "broker": {
+    "address": "test.mosquitto.org",
+    "port": 1883,
+    "auto_connect": true
+  },
+  "mappings": [
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di5",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.2C.R.LIFT-1-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 1.0,
+      "speed_units": "mph",
+      "trigger_name": "Sensor1",
+      "timeout": 1.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di4",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.A11.R.LIFT-2-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 1.0,
+      "speed_units": "mph",
+      "trigger_name": "Sensor2",
+      "timeout": 1.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di3",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.A11.L.LIFT-2-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 1.0,
+      "speed_units": "mph",
+      "trigger_name": "Sensor3",
+      "timeout": 1.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di2",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8080,
+      "udp_message": "SL.CTRL01-C.2C.L.LIFT-1-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 1.0,
+      "speed_units": "mph",
+      "trigger_name": "Sensor4",
+      "timeout": 1.0
+    },
+    {
+      "topic": "Advantech/74FE48A3DFA4/cfg/sensor/di_value/di1",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8080,
+      "udp_message": "{payload}",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 4.5,
+      "speed_units": "mph",
+      "trigger_name": "Sensor5",
+      "timeout": 1.0
+    },
+    {
+      "topic": "Advantech/74FE48A3DFA4/cfg/sensor/di_value/di2",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8080,
+      "udp_message": "{payload}",
+      "trigger_value": "1",
+      "udp_delay": 0.0,
+      "car_length": 4.5,
+      "speed_units": "mph",
+      "trigger_name": "Sensor6",
+      "timeout": 1.0
+    }
+  ]
+}
