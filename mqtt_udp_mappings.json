@@ -1,0 +1,41 @@
+{
+  "broker": {
+    "address": "test.mosquitto.org",
+    "port": 1883,
+    "auto_connect": true
+  },
+  "mappings": [
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di5",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.2C.R.LIFT-1-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di4",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.A11.R.LIFT-2-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di3",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8000,
+      "udp_message": "SL.CTRL01-C.A11.L.LIFT-2-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0
+    },
+    {
+      "topic": "Advantech/74FE48A4999A/cfg/sensor/di_value/di2",
+      "udp_ip": "127.0.0.1",
+      "udp_port": 8080,
+      "udp_message": "SL.CTRL01-C.2C.L.LIFT-1-TOP.GO",
+      "trigger_value": "1",
+      "udp_delay": 0.0
+    }
+  ]
+}
